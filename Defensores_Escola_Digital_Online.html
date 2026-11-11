@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Defensores da Escola Digital – Versão Online | Fundamental II</title>
+  <style>
+    :root {
+      --cream: #F7F1E5;
+      --ink: #1A1F1C;
+      --ink-soft: #3A4140;
+      --green: #2F5D3F;
+      --green-deep: #264C32;
+      --orange: #E5A23B;
+      --blue: #6E9BBC;
+      --pink: #B6446B;
+      --yellow: #F5D76E;
+      --red: #C0392B;
+      --white: #FFFFFF;
+      --shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+    header {
+      background: var(--green-deep);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 { font-size: 1.35rem; font-weight: 700; }
+    header .subtitle { font-size: 0.85rem; opacity: 0.9; }
+    .badge {
+      background: var(--orange);
+      color: var(--ink);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 18px;
+    }
+    @media (max-width: 960px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    /* ===== BOARD ===== */
+    .board-area {
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .board-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: 1fr 140px 1fr;
+      grid-template-rows: 1fr 140px 1fr;
+      gap: 10px;
+      min-height: 420px;
+    }
+    .sector {
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      border: 3px solid;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .sector.highlight {
+      transform: scale(1.03);
+      box-shadow: 0 0 0 4px rgba(229,162,59,0.5);
+    }
+    .sector.hit {
+      animation: shake 0.45s ease;
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .sector h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .sector .ip {
+      font-size: 0.7rem;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+    .tokens-slot {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-content: flex-start;
+      min-height: 60px;
+    }
+    .token-placed {
+      background: white;
+      border: 2px solid var(--green);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .token-placed:hover { background: #fee; border-color: var(--red); }
+
+    /* positions */
+    .sector.admin { grid-column: 1; grid-row: 1; background: #E8F1F7; border-color: var(--blue); }
+    .sector.biblio { grid-column: 3; grid-row: 1; background: #E8F0E9; border-color: var(--green); }
+    .sector.sala { grid-column: 1; grid-row: 3; background: #FDF3E0; border-color: var(--orange); }
+    .sector.lab { grid-column: 3; grid-row: 3; background: #F9E8EE; border-color: var(--pink); }
+
+    .server {
+      grid-column: 2; grid-row: 2;
+      background: linear-gradient(145deg, #F5D76E, #E5A23B);
+      border: 4px solid #2C3E50;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      position: relative;
+    }
+    .server .label { font-size: 0.85rem; line-height: 1.2; }
+    .server .ip { font-size: 0.7rem; opacity: 0.8; margin-top: 4px; }
+    .server.danger {
+      background: linear-gradient(145deg, #e74c3c, #c0392b);
+      color: white;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.5); }
+      50% { box-shadow: 0 0 0 12px rgba(192,57,43,0); }
+    }
+    .server-status {
+      position: absolute;
+      bottom: -28px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+      background: white;
+      padding: 2px 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    /* ===== SIDE PANEL ===== */
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .panel h2 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--green-deep);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat {
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .stat .num { font-size: 1.6rem; font-weight: 800; color: var(--green); }
+    .stat .lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
+
+    /* Threat card */
+    .threat-card {
+      background: linear-gradient(135deg, #FCE8E8, #f5d0d0);
+      border: 2px solid var(--red);
+      border-radius: 12px;
+      padding: 14px;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .threat-card.empty {
+      background: #f0f0f0;
+      border-color: #ccc;
+      color: #888;
+      text-align: center;
+    }
+    .threat-card .type {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 4px;
+    }
+    .threat-card .name {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .threat-card .desc { font-size: 0.82rem; opacity: 0.9; }
+
+    /* Defenses */
+    .defenses-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .def-btn {
+      background: #E8F0E9;
+      border: 2px solid var(--green);
+      border-radius: 8px;
+      padding: 7px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s;
+    }
+    .def-btn:hover:not(:disabled) {
+      background: var(--green);
+      color: white;
+    }
+    .def-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .def-btn.selected {
+      background: var(--green);
+      color: white;
+      box-shadow: 0 0 0 2px var(--orange);
+    }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--green); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--green-deep); }
+    .btn-secondary { background: var(--orange); color: var(--ink); }
+    .btn-secondary:hover:not(:disabled) { filter: brightness(1.05); }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-ghost { background: #eee; color: var(--ink); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Log */
+    .log {
+      font-size: 0.78rem;
+      max-height: 140px;
+      overflow-y: auto;
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 8px;
+    }
+    .log-entry { padding: 3px 0; border-bottom: 1px solid #eee; }
+    .log-entry:last-child { border-bottom: none; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: white;
+      border-radius: 18px;
+      padding: 28px;
+      max-width: 440px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+    .modal h2 { font-size: 1.5rem; margin-bottom: 10px; }
+    .modal p { margin-bottom: 18px; color: var(--ink-soft); }
+    .modal .btn { min-width: 140px; }
+
+    /* Phase indicator */
+    .phase {
+      display: inline-block;
+      background: var(--blue);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .phase.warn { background: var(--orange); color: var(--ink); }
+    .phase.danger { background: var(--red); }
+
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>🛡️ Defensores da Escola Digital</h1>
+      <div class="subtitle">Versão Online · Ensino Fundamental II · Inspirado no Th3_0ff1c3</div>
+    </div>
+    <div class="badge">Jogo Colaborativo · 8 Turnos</div>
+  </header>
+
+  <div class="container">
+    <!-- BOARD -->
+    <div class="board-area">
+      <div class="board-title">
+        <span>Tabuleiro da Escola</span>
+        <span class="phase" id="phaseLabel">Aguardando início</span>
+      </div>
+      <div class="board" id="board">
+        <div class="sector admin" data-sector="admin">
+          <h3>Administração</h3>
+          <div class="ip">192.168.1.x</div>
+          <div class="tokens-slot" id="slot-admin"></div>
+        </div>
+        <div class="sector biblio" data-sector="biblio">
+          <h3>Biblioteca</h3>
+          <div class="ip">192.168.2.x</div>
+          <div class="tokens-slot" id="slot-biblio"></div>
+        </div>
+        <div class="server" id="server">
+          <div class="label">SERVIDOR<br>CENTRAL</div>
+          <div class="ip">192.168.0.1</div>
+          <div class="server-status" id="serverStatus">Protegido</div>
+        </div>
+        <div class="sector sala" data-sector="sala">
+          <h3>Sala de Aula</h3>
+          <div class="ip">192.168.3.x</div>
+          <div class="tokens-slot" id="slot-sala"></div>
+        </div>
+        <div class="sector lab" data-sector="lab">
+          <h3>Laboratório</h3>
+          <div class="ip">192.168.4.x</div>
+          <div class="tokens-slot" id="slot-lab"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="side">
+      <div class="panel">
+        <h2>📊 Status da Partida</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="num" id="turnNum">0</div>
+            <div class="lbl">Turno / 8</div>
+          </div>
+          <div class="stat">
+            <div class="num" id="pointsNum">0</div>
+            <div class="lbl">Pontos</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>⚠️ Carta de Ameaça</h2>
+        <div class="threat-card empty" id="threatCard">
+          Clique em “Sortear Ameaça” para começar o turno.
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>🛡️ Tokens de Defesa</h2>
+        <p style="font-size:0.75rem;margin-bottom:8px;opacity:0.8;">Selecione um token e depois clique em um setor para colocá-lo.</p>
+        <div class="defenses-grid" id="defensesGrid"></div>
+      </div>
+
+      <div class="panel controls">
+        <button class="btn btn-primary" id="btnDraw">1. Sortear Ameaça</button>
+        <button class="btn btn-secondary" id="btnRoll" disabled>2. Sortear Setor Alvo</button>
+        <button class="btn btn-primary" id="btnResolve" disabled>3. Resolver Turno</button>
+        <button class="btn btn-ghost" id="btnNext" disabled>Próximo Turno →</button>
+        <button class="btn btn-danger" id="btnReset" style="margin-top:6px;">Reiniciar Jogo</button>
+      </div>
+
+      <div class="panel">
+        <h2>📝 Registro</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Defensores da Escola Digital · Versão online educacional · Inspirado em Th3_0ff1c3 · 
+    Autores da sequência: Euma S. S. de Jesus, Marcele S. S. Bacelar, Priscila B. de S. Lima, Rodrigo Messias Cordeiro
+  </footer>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <h2 id="modalTitle">Título</h2>
+      <p id="modalMsg">Mensagem</p>
+      <button class="btn btn-primary" id="modalBtn">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== DADOS ==========
+    const THREATS = [
+      { id: 1, name: "Phishing", desc: "E-mail ou mensagem falsa pedindo senha ou dados pessoais. Parece legítimo, mas é golpe." },
+      { id: 2, name: "Senha Fraca", desc: "Uso de senha fácil de adivinhar (nome, data de nascimento, 123456)." },
+      { id: 3, name: "Vírus / Malware", desc: "Programa malicioso baixado que pode danificar arquivos ou roubar dados." },
+      { id: 4, name: "Ransomware", desc: "Arquivos ficam bloqueados e pedem 'resgate'. Nunca pague!" },
+      { id: 5, name: "Spyware", desc: "Software espião que captura o que é digitado (senhas, mensagens)." },
+      { id: 6, name: "Mensagem de Estranho", desc: "Desconhecido tenta conversar e pede informações pessoais." },
+      { id: 7, name: "Link Suspeito", desc: "Link em rede social ou mensagem que leva a site falso ou perigoso." },
+      { id: 8, name: "Pen Drive Desconhecido", desc: "Alguém deixa um pen drive. Pode conter malware." },
+      { id: 9, name: "Falsa Atualização", desc: "Pop-up dizendo 'atualize agora' que na verdade instala vírus." },
+      { id: 10, name: "Cyberbullying", desc: "Mensagens ofensivas, constrangedoras ou ameaçadoras online." },
+      { id: 11, name: "Wi-Fi Público", desc: "Conectar em rede aberta sem cuidado pode expor dados." },
+      { id: 12, name: "Compartilhar Demais", desc: "Postar localização, escola, rotina ou fotos sensíveis publicamente." }
+    ];
+
+    const DEFENSES = [
+      { id: "senha", name: "Senha Forte" },
+      { id: "antivirus", name: "Antivírus" },
+      { id: "fonte", name: "Verificar Fonte" },
+      { id: "professor", name: "Contar ao Professor" },
+      { id: "naoclicar", name: "Não Clicar" },
+      { id: "backup", name: "Backup" },
+      { id: "atualizar", name: "Atualizar Sistema" },
+      { id: "privacidade", name: "Privacidade" },
+      { id: "reportar", name: "Reportar" },
+      { id: "firewall", name: "Firewall" },
+      { id: "2fa", name: "Autenticação 2 Passos" },
+      { id: "dados", name: "Não Compartilhar Dados" }
+    ];
+
+    // Mapeamento simplificado: quais defesas são boas contra cada ameaça (para feedback educacional)
+    const EFFECTIVE = {
+      1: ["fonte", "naoclicar", "professor", "senha"],           // Phishing
+      2: ["senha", "2fa"],                                       // Senha Fraca
+      3: ["antivirus", "atualizar", "naoclicar"],                // Vírus
+      4: ["backup", "antivirus", "atualizar"],                   // Ransomware
+      5: ["antivirus", "firewall", "atualizar"],                 // Spyware
+      6: ["dados", "professor", "reportar", "privacidade"],      // Estranho
+      7: ["fonte", "naoclicar", "professor"],                    // Link
+      8: ["antivirus", "naoclicar", "professor"],                // Pen Drive
+      9: ["fonte", "naoclicar", "atualizar"],                    // Falsa atualização
+      10: ["reportar", "professor", "privacidade"],              // Cyberbullying
+      11: ["firewall", "vpn", "dados"],                          // Wi-Fi (vpn não existe, mas ok)
+      12: ["privacidade", "dados", "professor"]                  // Compartilhar demais
+    };
+
+    const SECTORS = ["admin", "biblio", "sala", "lab"];
+    const SECTOR_NAMES = {
+      admin: "Administração",
+      biblio: "Biblioteca",
+      sala: "Sala de Aula",
+      lab: "Laboratório"
+    };
+
+    // ========== ESTADO ==========
+    let state = {
+      turn: 0,
+      points: 0,
+      phase: "idle", // idle | threat | defend | target | resolve | end
+      currentThreat: null,
+      targetSector: null,
+      selectedDefense: null,
+      placed: { admin: [], biblio: [], sala: [], lab: [] },
+      serverInfected: false,
+      usedDefenses: new Set(),
+      deck: []
+    };
+
+    // ========== DOM ==========
+    const $ = (id) => document.getElementById(id);
+    const logEl = $("log");
+    const phaseLabel = $("phaseLabel");
+
+    function log(msg) {
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      entry.textContent = msg;
+      logEl.prepend(entry);
+    }
+
+    function showModal(title, msg, cb) {
+      $("modalTitle").textContent = title;
+      $("modalMsg").textContent = msg;
+      $("modal").classList.add("show");
+      $("modalBtn").onclick = () => {
+        $("modal").classList.remove("show");
+        if (cb) cb();
+      };
+    }
+
+    function setPhase(p) {
+      state.phase = p;
+      const labels = {
+        idle: "Aguardando início",
+        threat: "Fase: Ameaça sorteada",
+        defend: "Fase: Colocar defesas",
+        target: "Fase: Setor alvo definido",
+        resolve: "Fase: Resolução",
+        end: "Fim de jogo"
+      };
+      phaseLabel.textContent = labels[p] || p;
+      phaseLabel.className = "phase" + (p === "end" && state.serverInfected ? " danger" : p === "defend" ? " warn" : "");
+    }
+
+    function updateUI() {
+      $("turnNum").textContent = state.turn;
+      $("pointsNum").textContent = state.points;
+
+      // Threat card
+      const card = $("threatCard");
+      if (state.currentThreat) {
+        card.className = "threat-card";
+        card.innerHTML = `
+          <div class="type">Ameaça do turno</div>
+          <div class="name">${state.currentThreat.name}</div>
+          <div class="desc">${state.currentThreat.desc}</div>
+        `;
+      } else {
+        card.className = "threat-card empty";
+        card.textContent = "Clique em “Sortear Ameaça” para começar o turno.";
+      }
+
+      // Tokens placed
+      SECTORS.forEach(s => {
+        const slot = $("slot-" + s);
+        slot.innerHTML = "";
+        state.placed[s].forEach((defId, idx) => {
+          const def = DEFENSES.find(d => d.id === defId);
+          const el = document.createElement("div");
+          el.className = "token-placed";
+          el.textContent = def ? def.name : defId;
+          el.title = "Clique para remover";
+          el.onclick = () => {
+            if (state.phase === "defend") {
+              state.placed[s].splice(idx, 1);
+              state.usedDefenses.delete(defId);
+              updateUI();
+              renderDefenses();
+            }
+          };
+          slot.appendChild(el);
+        });
+      });
+
+      // Server
+      const server = $("server");
+      const status = $("serverStatus");
+      if (state.serverInfected) {
+        server.classList.add("danger");
+        status.textContent = "⚠ INFECTADO";
+      } else {
+        server.classList.remove("danger");
+        status.textContent = "Protegido";
+      }
+
+      // Buttons
+      $("btnDraw").disabled = !(state.phase === "idle" || (state.phase === "end" && false));
+      if (state.turn >= 8 && state.phase === "idle") {
+        $("btnDraw").disabled = true;
+      }
+      $("btnRoll").disabled = state.phase !== "defend";
+      $("btnResolve").disabled = state.phase !== "target";
+      $("btnNext").disabled = state.phase !== "resolve";
+
+      // Highlight target
+      document.querySelectorAll(".sector").forEach(el => el.classList.remove("highlight", "hit"));
+      if (state.targetSector) {
+        const el = document.querySelector(`.sector[data-sector="${state.targetSector}"]`);
+        if (el) el.classList.add("highlight");
+      }
+    }
+
+    function renderDefenses() {
+      const grid = $("defensesGrid");
+      grid.innerHTML = "";
+      DEFENSES.forEach(d => {
+        const btn = document.createElement("button");
+        btn.className = "def-btn" + (state.selectedDefense === d.id ? " selected" : "");
+        btn.textContent = d.name;
+        btn.disabled = state.phase !== "defend" || state.usedDefenses.has(d.id);
+        btn.onclick = () => {
+          if (state.phase !== "defend") return;
+          state.selectedDefense = state.selectedDefense === d.id ? null : d.id;
+          renderDefenses();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    // Click on sector to place token
+    document.querySelectorAll(".sector").forEach(el => {
+      el.addEventListener("click", () => {
+        if (state.phase !== "defend" || !state.selectedDefense) return;
+        const sector = el.dataset.sector;
+        if (state.placed[sector].length >= 3) {
+          log("Este setor já tem 3 defesas.");
+          return;
+        }
+        state.placed[sector].push(state.selectedDefense);
+        state.usedDefenses.add(state.selectedDefense);
+        log(`Defesa "${DEFENSES.find(d=>d.id===state.selectedDefense).name}" colocada em ${SECTOR_NAMES[sector]}.`);
+        state.selectedDefense = null;
+        updateUI();
+        renderDefenses();
+      });
+    });
+
+    // ========== AÇÕES ==========
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startGame() {
+      state = {
+        turn: 0,
+        points: 0,
+        phase: "idle",
+        currentThreat: null,
+        targetSector: null,
+        selectedDefense: null,
+        placed: { admin: [], biblio: [], sala: [], lab: [] },
+        serverInfected: false,
+        usedDefenses: new Set(),
+        deck: shuffle(THREATS)
+      };
+      logEl.innerHTML = "";
+      log("Jogo iniciado. Preparem as defesas e boa sorte, Defensores!");
+      setPhase("idle");
+      updateUI();
+      renderDefenses();
+    }
+
+    $("btnDraw").onclick = () => {
+      if (state.turn >= 8) {
+        endGame(true);
+        return;
+      }
+      state.turn++;
+      // reset placements each turn
+      state.placed = { admin: [], biblio: [], sala: [], lab: [] };
+      state.usedDefenses = new Set();
+      state.targetSector = null;
+      state.selectedDefense = null;
+
+      if (state.deck.length === 0) state.deck = shuffle(THREATS);
+      state.currentThreat = state.deck.pop();
+
+      log(`Turno ${state.turn}: Ameaça sorteada → ${state.currentThreat.name}`);
+      setPhase("defend");
+      updateUI();
+      renderDefenses();
+    };
+
+    $("btnRoll").onclick = () => {
+      const idx = Math.floor(Math.random() * 4);
+      state.targetSector = SECTORS[idx];
+      // 10% chance of hitting server directly (special event)
+      const serverHit = Math.random() < 0.12;
+      if (serverHit) {
+        state.targetSector = "server";
+        log("⚠ Evento especial: a ameaça mira diretamente o SERVIDOR CENTRAL!");
+      } else {
+        log(`Setor alvo sorteado: ${SECTOR_NAMES[state.targetSector]}`);
+      }
+      setPhase("target");
+      updateUI();
+    };
+
+    $("btnResolve").onclick = () => {
+      const threat = state.currentThreat;
+      let success = false;
+      let msg = "";
+
+      if (state.targetSector === "server") {
+        // Check if ANY sector has a relevant defense (collective)
+        const allDefs = [].concat(...Object.values(state.placed));
+        const effective = EFFECTIVE[threat.id] || [];
+        const hasGood = allDefs.some(d => effective.includes(d));
+        if (hasGood || allDefs.length >= 3) {
+          success = true;
+          state.points += 2;
+          msg = `Servidor protegido coletivamente contra ${threat.name}! +2 pontos.`;
+        } else {
+          state.serverInfected = true;
+          msg = `O Servidor Central foi infectado por ${threat.name}! Todos perderam.`;
+        }
+      } else {
+        const defs = state.placed[state.targetSector] || [];
+        const effective = EFFECTIVE[threat.id] || [];
+        const hasGood = defs.some(d => effective.includes(d));
+        if (hasGood) {
+          success = true;
+          state.points += 1;
+          msg = `Defesa bem-sucedida em ${SECTOR_NAMES[state.targetSector]}! +1 ponto.`;
+        } else if (defs.length > 0) {
+          // Partial credit if any defense was placed
+          state.points += 0;
+          msg = `Defesa em ${SECTOR_NAMES[state.targetSector]} não foi a mais adequada para ${threat.name}. Sem pontos.`;
+        } else {
+          msg = `Nenhuma defesa em ${SECTOR_NAMES[state.targetSector]}. A ameaça passou.`;
+        }
+        // Visual feedback
+        const el = document.querySelector(`.sector[data-sector="${state.targetSector}"]`);
+        if (el) {
+          el.classList.add("hit");
+          setTimeout(() => el.classList.remove("hit"), 500);
+        }
+      }
+
+      log(msg);
+      setPhase("resolve");
+      updateUI();
+
+      if (state.serverInfected) {
+        setTimeout(() => endGame(false), 600);
+      } else if (state.turn >= 8) {
+        setTimeout(() => endGame(true), 600);
+      }
+    };
+
+    $("btnNext").onclick = () => {
+      state.currentThreat = null;
+      state.targetSector = null;
+      state.selectedDefense = null;
+      setPhase("idle");
+      updateUI();
+      renderDefenses();
+      if (state.turn >= 8) {
+        endGame(true);
+      }
+    };
+
+    $("btnReset").onclick = () => {
+      if (confirm("Reiniciar o jogo? Todo o progresso será perdido.")) {
+        startGame();
+      }
+    };
+
+    function endGame(won) {
+      setPhase("end");
+      updateUI();
+      if (won && !state.serverInfected) {
+        showModal(
+          "🎉 Vitória Coletiva!",
+          `Parabéns, Defensores! O Servidor Central está seguro após 8 turnos.\nPontos de proteção: ${state.points}.\n\nDiscutam: quais defesas foram mais importantes? O que aprenderam?`,
+          null
+        );
+        log("FIM DE JOGO — Vitória! Servidor protegido.");
+      } else {
+        showModal(
+          "💥 Derrota Coletiva",
+          `O Servidor Central foi infectado. Todos perderam juntos.\nPontos acumulados: ${state.points}.\n\nDiscutam: o que poderia ter sido feito de forma diferente?`,
+          null
+        );
+        log("FIM DE JOGO — Derrota. Servidor infectado.");
+      }
+    }
+
+    // Init
+    startGame();
+  </script>
+</body>
+</html>
